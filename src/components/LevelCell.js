@@ -20,15 +20,14 @@ class LevelCell extends React.Component {
   render() {
     const {cell, coords, hasRotated, onTileClicked} = this.props;
 
+    const cellid = coords.rowIndex + '_' + coords.columnIndex;
     const baseTile = Tiles[cell.tileSet][0];
     const tile = Tiles[cell.tileSet][cell.index];
+    const baseStrokeWidth = 5;
+    const outerStrokeWidth = 1;
 
     var styles = {
-      size: 30,
-      stroke: {
-        stroke: 'black',
-        fill: 'none'
-      },
+      size: 50,
       div: {
         animationName: 'rotatedTile' + cell.index
       }
@@ -46,19 +45,49 @@ class LevelCell extends React.Component {
     if (containsDirections(baseTile, [Sides.LEFT, Sides.UP]))
       circles = [...circles, {cx: 0, cy: 0}];
 
+
     if (circles.length == 0) {
       if (containsDirections(baseTile, [Sides.UP])) {
+        const maskId = 'mask' + cellid;
         content = (
           <g>
-            <circle cx={styles.size / 2} cy={styles.size / 2} r={styles.size / 5} style={styles.stroke} />
-            <line x1={styles.size / 2} y1={styles.size * (1/2 - 1/5)} x2={styles.size / 2} y2={0} style={styles.stroke} />
+            <mask id={maskId}>
+              <rect width="100%" height="100%" fill="white" />
+              <circle cx={styles.size / 2} cy={styles.size / 2} r={styles.size / 5 - baseStrokeWidth / 2} fill="black" />
+            </mask>
+            <circle cx={styles.size / 2} cy={styles.size / 2} r={styles.size / 5 + baseStrokeWidth / 2} mask={'url(#' + maskId + ')'} />
+            <rect x={styles.size / 2 - baseStrokeWidth / 2} width={baseStrokeWidth} y={0} height={styles.size * (1/2 - 1/5)} />
           </g>
         );
       } else throw new Error("Here we have a shortcut assuming that the base tile for single-leg tile looks up")
     }
     else {
       content = circles.map((circle, index) => {
-        return (<circle key={index} cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2} style={styles.stroke} />);
+        const maskId = 'mask' + cellid + '_' + index;
+        var nextCircleSvg = (<g/>);
+
+        if (index < circles.length - 1) {
+          const nextCircle = circles[index + 1];
+
+          nextCircleSvg = (
+            <g>
+              <circle cx={nextCircle.cx * styles.size} cy={nextCircle.cy * styles.size} r={styles.size / 2 + baseStrokeWidth / 2 + 2} fill='black' />
+              <circle cx={nextCircle.cx * styles.size} cy={nextCircle.cy * styles.size} r={styles.size / 2 + baseStrokeWidth / 2} fill='white' />
+            </g>
+          );
+        }
+
+        return (
+          <g key={index}>
+            <mask id={maskId}>
+              <rect width="100%" height="100%" fill="white" />
+              {nextCircleSvg}
+              <circle cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2 - baseStrokeWidth / 2} fill='black' />
+            </mask>
+
+            <circle cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2 + baseStrokeWidth / 2} style={styles.stroke} mask={'url(#' + maskId + ')'} />
+          </g>
+        );
       })
     }
 
