@@ -11,8 +11,8 @@ const pickRandomTile = () => {
 const level = (state = [], action) => {
   switch (action.type) {
     case 'NEXT_LEVEL':
-      const level = Array(5).fill().map(_ =>
-        Array(5).fill().map(_ => pickRandomTile())
+      const level = Array(10).fill().map(_ =>
+        Array(10).fill().map(_ => pickRandomTile())
       );
       level[0][0] = { tileSet: 0, index: 0 };
       return level;

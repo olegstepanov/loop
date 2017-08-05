@@ -63,9 +63,11 @@
       padding: 0;
       user-select: none;
       background-color: #c9d8c5;
+
+      font-family: 'Trebuchet MS';
     }
 
-    #root {
+    #content {
       display: inline-block;
       vertical-align: middle;
     }
@@ -75,6 +77,13 @@
       display: inline-block;
       vertical-align: middle;
       height: 100%;
+    }
+
+    .footer {
+      font-size: 10px;
+      padding-top: 10px;
+      text-align: left;
+      opacity: 0.5;
     }
 
     table {
@@ -96,7 +105,13 @@
   </head>
 
   <body>
-    <div id="root" >
+    <div id="content">
+      <div id="root" >
+      </div>
+
+      <div class="footer">
+        <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a>. Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
+      </div>
     </div>
 
     <script src="bundle.js"></script>
