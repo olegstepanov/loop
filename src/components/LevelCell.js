@@ -25,7 +25,7 @@ class LevelCell extends React.Component {
 
     var styles = {
       size: 30,
-      circle: {
+      stroke: {
         stroke: 'black',
         fill: 'none'
       },
@@ -34,6 +34,7 @@ class LevelCell extends React.Component {
       }
     }
 
+    var content = {};
     var circles = [];
 
     if (containsDirections(baseTile, [Sides.UP, Sides.RIGHT]))
@@ -45,16 +46,27 @@ class LevelCell extends React.Component {
     if (containsDirections(baseTile, [Sides.LEFT, Sides.UP]))
       circles = [...circles, {cx: 0, cy: 0}];
 
+    if (circles.length == 0) {
+      if (containsDirections(baseTile, [Sides.UP])) {
+        content = (
+          <g>
+            <circle cx={styles.size / 2} cy={styles.size / 2} r={styles.size / 5} style={styles.stroke} />
+            <line x1={styles.size / 2} y1={styles.size * (1/2 - 1/5)} x2={styles.size / 2} y2={0} style={styles.stroke} />
+          </g>
+        );
+      } else throw new Error("Here we have a shortcut assuming that the base tile for single-leg tile looks up")
+    }
+    else {
+      content = circles.map((circle, index) => {
+        return (<circle key={index} cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2} style={styles.stroke} />);
+      })
+    }
+
     const className = hasRotated ? 'rotatedTile' : 'staticTile';
-
-    const svgCircles = circles.map((circle, index) => {
-      return (<circle key={index} cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2} style={styles.circle} />);
-    })
-
     return (
       <div className={className} style={styles.div}>
         <svg width={styles.size} height={styles.size } onClick={() => onTileClicked(coords)}>
-          {svgCircles}
+          {content}
         </svg>
       </div>
     );
