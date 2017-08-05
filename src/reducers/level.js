@@ -17,9 +17,8 @@ const level = (state = [], action) => {
       level[0][0] = { tileSet: 0, index: 0 };
       return level;
     case 'ROTATE_TILE':
-      const rowIndex = action.rowIndex;
-      const columnIndex = action.columnIndex;
-      const tilesInSet = Tiles[state[rowIndex][columnIndex].tileSet].length;
+      const rowIndex = action.coords.rowIndex;
+      const columnIndex = action.coords.columnIndex;
 
       const result = [
                 ...state.slice(0, rowIndex),
@@ -27,7 +26,7 @@ const level = (state = [], action) => {
                   ...state[rowIndex].slice(0, columnIndex),
                   {
                     ...state[rowIndex][columnIndex],
-                    index: (state[rowIndex][columnIndex].index + 1) % tilesInSet
+                    index: (state[rowIndex][columnIndex].index + 1) % 4
                   },
                   ...state[rowIndex].slice(columnIndex + 1)
                 ],

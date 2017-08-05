@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { Sides, Tiles } from '../global/Tiles'
 import { rotateTile } from '../actions'
 import { connect } from 'react-redux'
+import _ from 'lodash'
 
 const containsDirections = (tile, directions) => {
   for (var dir of directions)
@@ -11,44 +12,66 @@ const containsDirections = (tile, directions) => {
   return true;
 }
 
-const LevelCell = ({level, rowIndex, columnIndex, onTileClicked}) => {
-  const cell = level[rowIndex][columnIndex];
-  const tile = Tiles[cell.tileSet][cell.index];
-
-  const style = {
-    size: 30
+class LevelCell extends React.Component {
+  constructor(props) {
+    super(props);
   }
 
-  const svgStyle = {
-    stroke: 'black',
-    fill: 'none'
-  };
+  render() {
+    const {cell, coords, hasRotated, onTileClicked} = this.props;
 
-  var circles = [];
+    const baseTile = Tiles[cell.tileSet][0];
+    const tile = Tiles[cell.tileSet][cell.index];
 
-  if (containsDirections(tile, [Sides.UP, Sides.RIGHT]))
-    circles = [...circles, {cx: 1, cy: 0}];
-  if (containsDirections(tile, [Sides.RIGHT, Sides.DOWN]))
-    circles = [...circles, {cx: 1, cy: 1}];
-  if (containsDirections(tile, [Sides.DOWN, Sides.LEFT]))
-    circles = [...circles, {cx: 0, cy: 1}];
-  if (containsDirections(tile, [Sides.LEFT, Sides.UP]))
-    circles = [...circles, {cx: 0, cy: 0}];
+    var styles = {
+      size: 30,
+      circle: {
+        stroke: 'black',
+        fill: 'none'
+      },
+      div: {
+        animationName: 'rotatedTile' + cell.index
+      }
+    }
 
-  const svgCircles = circles.map((circle, index) => {
-    return (<circle key={index} cx={circle.cx * style.size} cy={circle.cy * style.size} r={style.size / 2} style={svgStyle} />);
-  })
+    var circles = [];
 
-  return (
-      <svg width={style.size} height={style.size } onClick={() => onTileClicked(rowIndex, columnIndex)}>
-        {svgCircles}
-      </svg>
-  );
+    if (containsDirections(baseTile, [Sides.UP, Sides.RIGHT]))
+      circles = [...circles, {cx: 1, cy: 0}];
+    if (containsDirections(baseTile, [Sides.RIGHT, Sides.DOWN]))
+      circles = [...circles, {cx: 1, cy: 1}];
+    if (containsDirections(baseTile, [Sides.DOWN, Sides.LEFT]))
+      circles = [...circles, {cx: 0, cy: 1}];
+    if (containsDirections(baseTile, [Sides.LEFT, Sides.UP]))
+      circles = [...circles, {cx: 0, cy: 0}];
+
+    const className = hasRotated ? 'rotatedTile' : 'staticTile';
+
+    const svgCircles = circles.map((circle, index) => {
+      return (<circle key={index} cx={circle.cx * styles.size} cy={circle.cy * styles.size} r={styles.size / 2} style={styles.circle} />);
+    })
+
+    return (
+      <div className={className} style={styles.div}>
+        <svg width={styles.size} height={styles.size } onClick={() => onTileClicked(coords)}>
+          {svgCircles}
+        </svg>
+      </div>
+    );
+  }
+}
+
+const hasRotated = (state, ownProps) => {
+  if (state.lastAction && state.lastAction.type === 'ROTATE_TILE'){
+    return _.isEqual(state.lastAction.coords, ownProps.coords);
+  }
+
+  return false;
 }
 
 export default connect(
-  (state, ownProps) => { return {level: state.level, ...ownProps}; },
+  (state, ownProps) => { return {level: state.level, hasRotated: hasRotated(state, ownProps), ...ownProps}; },
   dispatch => { return {
-    onTileClicked: (rowIndex, columnIndex) => dispatch(rotateTile(rowIndex, columnIndex))
+    onTileClicked: (coords) => dispatch(rotateTile(coords))
   }; }
 )(LevelCell);

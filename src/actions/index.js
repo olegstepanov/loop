@@ -4,10 +4,9 @@ export const nextLevel = () => {
   }
 }
 
-export const rotateTile = (rowIndex, columnIndex) => {
+export const rotateTile = (coords) => {
   return {
     type: 'ROTATE_TILE',
-    rowIndex,
-    columnIndex
+    coords
   }
 }

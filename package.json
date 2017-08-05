@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/olegstepanov/loop#readme",
   "dependencies": {
+    "lodash": "^4.17.4",
     "normalize.css": "^7.0.0",
     "prop-types": "^15.5.10",
     "react": "^15.6.1",

@@ -7,10 +7,61 @@
     <link rel="stylesheet" href="./node_modules/normalize.css/normalize.css" />
 
     <style>
+    @keyframes rotatedTile0 {
+      0% {
+        transform: rotate(270deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes rotatedTile1 {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(90deg);
+      }
+    }
+
+    @keyframes rotatedTile2 {
+      0% {
+        transform: rotate(90deg);
+      }
+      100% {
+        transform: rotate(180deg);
+      }
+    }
+
+    @keyframes rotatedTile3 {
+      0% {
+        transform: rotate(180deg);
+      }
+      100% {
+        transform: rotate(270deg);
+      }
+    }
+
+    .rotatedTile {
+      animation-duration: 100ms;
+      animation-iteration-count: 1;
+      animation-fill-mode: both;
+      transform-origin: 50% 50%;
+    }
+
+    .staticTile {
+      animation-duration: 0ms;
+      animation-iteration-count: 1;
+      animation-fill-mode: both;
+      transform-origin: 50% 50%;
+    }
+
     body {
       text-align: center;
       margin: 0;
       padding: 0;
+      user-select: none;
     }
 
     #root {
