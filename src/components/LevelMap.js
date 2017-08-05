@@ -6,13 +6,13 @@ import Tiles from '../global/Tiles'
 import { connect } from 'react-redux'
 
 const LevelMap = ({level}) => {
-    const rowFunction = (row, rowIndex) => row.map((cell, columnIndex) => <td key={'cell_' + rowIndex + columnIndex}><LevelCell level={level} rowIndex={rowIndex} columnIndex={columnIndex}/></td>)
-    const tableRows = level.map((row, rowIndex) => <tr key={'row_' + rowIndex}>{rowFunction(row, rowIndex)}</tr>)
+    const rowFunction = (row, rowIndex) => row.map((cell, columnIndex) => <div className="levelmap_cell" key={'cell_' + rowIndex + columnIndex}><LevelCell level={level} rowIndex={rowIndex} columnIndex={columnIndex}/></div>)
+    const tableRows = level.map((row, rowIndex) => <div className="levelmap_row" key={'row_' + rowIndex}>{rowFunction(row, rowIndex)}</div>)
 
     return (
-      <table><tbody>
+      <div className="levelmap" cellSpacing="0">
       { tableRows }
-      </tbody></table>
+      </div>
     );
 }
 

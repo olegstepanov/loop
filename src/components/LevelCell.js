@@ -35,16 +35,14 @@ const LevelCell = ({level, rowIndex, columnIndex, onTileClicked}) => {
   if (containsDirections(tile, [Sides.LEFT, Sides.UP]))
     circles = [...circles, {cx: 0, cy: 0}];
 
-  const svgCircles = circles.map(circle => {
-    return (<circle cx={circle.cx * style.size} cy={circle.cy * style.size} r={style.size / 2} style={svgStyle} />);
+  const svgCircles = circles.map((circle, index) => {
+    return (<circle key={index} cx={circle.cx * style.size} cy={circle.cy * style.size} r={style.size / 2} style={svgStyle} />);
   })
 
   return (
-    <div>
       <svg width={style.size} height={style.size } onClick={() => onTileClicked(rowIndex, columnIndex)}>
         {svgCircles}
       </svg>
-    </div>
   );
 }
 

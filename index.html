@@ -3,10 +3,48 @@
     <script src="https://fb.me/react-15.1.0.js"></script>
     <script src="https://fb.me/react-dom-15.1.0.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.0.4/redux.min.js"></script>
+
+    <link rel="stylesheet" href="./node_modules/normalize.css/normalize.css" />
+
+    <style>
+    body {
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    #root {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    body:before {
+      content: "";
+      display: inline-block;
+      vertical-align: middle;
+      height: 100%;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    .levelmap {
+      display: table;
+    }
+
+    .levelmap_row {
+      display: table-row;
+    }
+
+    .levelmap_cell {
+      display: table-cell;
+    }
+    </style>
   </head>
 
   <body>
-    <div id="root">
+    <div id="root" >
     </div>
 
     <script src="bundle.js"></script>
