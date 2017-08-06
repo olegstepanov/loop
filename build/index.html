@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <script src="https://fb.me/react-15.1.0.js"></script>
+    <script src="https://fb.me/react-dom-15.1.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.0.4/redux.min.js"></script>
+
+    <link rel="stylesheet" href="./node_modules/normalize.css/normalize.css" />
+
+    <style>
+    @keyframes rotatedTile0 {
+      0% {
+        transform: rotate(270deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes rotatedTile1 {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(90deg);
+      }
+    }
+
+    @keyframes rotatedTile2 {
+      0% {
+        transform: rotate(90deg);
+      }
+      100% {
+        transform: rotate(180deg);
+      }
+    }
+
+    @keyframes rotatedTile3 {
+      0% {
+        transform: rotate(180deg);
+      }
+      100% {
+        transform: rotate(270deg);
+      }
+    }
+
+    .rotatedTile {
+      animation-duration: 100ms;
+      animation-iteration-count: 1;
+      animation-fill-mode: both;
+      transform-origin: 50% 50%;
+    }
+
+    .staticTile {
+      animation-duration: 0ms;
+      animation-iteration-count: 1;
+      animation-fill-mode: both;
+      transform-origin: 50% 50%;
+    }
+
+    body {
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      background-color: #ffffff;
+      font-family: 'Trebuchet MS';
+    }
+
+    #content {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    body:before {
+      content: "";
+      display: inline-block;
+      vertical-align: middle;
+      height: 100%;
+    }
+
+    .footer {
+      font-size: 10px;
+      padding-top: 10px;
+      text-align: left;
+      opacity: 0.5;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    .levelmap {
+      display: table;
+    }
+
+    .levelmap_row {
+      display: table-row;
+    }
+
+    .levelmap_cell {
+      display: table-cell;
+    }
+    </style>
+  </head>
+
+  <body>
+    <div id="content">
+      <div id="root" >
+      </div>
+
+      <div class="footer">
+        <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a> (<a href="https://github.com/olegstepanov/loop">source code</a>). Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
+      </div>
+    </div>
+
+    <script src="bundle.js"></script>
+  </body>
+</html>
