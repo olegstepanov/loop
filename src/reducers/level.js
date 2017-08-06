@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { Tiles, rotateTile } from '../global/Tiles'
-import levelGenerator from '../global/levelGenerator'
+import { levelGenerator, isConnected } from '../global/levelGenerator'
 
 const pickRandomTile = () => {
   const tileSet = Math.floor(Math.random() * Tiles.length);
@@ -9,28 +9,31 @@ const pickRandomTile = () => {
   return { tileSet, index };
 }
 
-const level = (state = [], action) => {
+const generateLevel = size => {
+  const level = levelGenerator(size, size);
+  if (level == null)
+    console.error("Could not generate connected level");
+  return level;
+}
+
+const level = (state = {map: []}, action) => {
   switch (action.type) {
-    case 'NEXT_LEVEL':
-      const level = levelGenerator(5, 5);
-      if (level == null)
-        console.error("Could not generate connected level");
-      return level;
+    case 'NEXT_LEVEL': return { map: generateLevel(action.size) };
     case 'ROTATE_TILE':
       const rowIndex = action.coords.rowIndex;
       const columnIndex = action.coords.columnIndex;
-
-      const result = [
-                ...state.slice(0, rowIndex),
+      const map = state.map;
+      const newMap = [
+                ...map.slice(0, rowIndex),
                 [
-                  ...state[rowIndex].slice(0, columnIndex),
-                  rotateTile(state[rowIndex][columnIndex]),
-                  ...state[rowIndex].slice(columnIndex + 1)
+                  ...map[rowIndex].slice(0, columnIndex),
+                  rotateTile(map[rowIndex][columnIndex]),
+                  ...map[rowIndex].slice(columnIndex + 1)
                 ],
-                ...state.slice(rowIndex + 1)
+                ...map.slice(rowIndex + 1)
               ];
 
-      return result;
+      return {...state, map: newMap};
     default:
       return state;
   }

@@ -23,7 +23,7 @@ const bitsSet = i => {
 
 const getTileSet = tile => {
   if ((tile == 0b1010) || (tile == 0b0101))
-    return 4;
+    return 5;
 
   return bitsSet(tile);
 }

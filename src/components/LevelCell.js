@@ -1,8 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Sides, Tiles, getTileSet } from '../global/Tiles'
-import { rotateTile } from '../actions'
+import { rotateTile, nextLevel } from '../actions'
 import { connect } from 'react-redux'
+import { isConnected } from '../global/levelGenerator'
 import _ from 'lodash'
 
 const containsDirections = (tile, directions) => {
@@ -73,7 +74,10 @@ class LevelCell extends React.Component {
         content = (
           <rect x={0} y={styles.size / 2 - baseStrokeWidth / 2} width={styles.size} height={baseStrokeWidth} />
         )
-      } else throw new Error("Here we have a shortcut assuming that the base tile for single-leg tile looks up")
+      } else if (baseTile == 0) {
+        content = (<g></g>)
+      }
+      else throw new Error("Here we have a shortcut assuming that the base tile for single-leg tile looks up")
     }
     else {
       content = circles.map((circle, index) => {
@@ -126,7 +130,15 @@ const hasRotated = (state, ownProps) => {
 
 export default connect(
   (state, ownProps) => { return {level: state.level, hasRotated: hasRotated(state, ownProps), ...ownProps}; },
-  dispatch => { return {
-    onTileClicked: (coords) => dispatch(rotateTile(coords))
-  }; }
+  (dispatch) => ({dispatch}),
+  (stateProps, {dispatch}, ownProps) => {
+    return {
+      ...ownProps,
+      ...stateProps,
+      onTileClicked: (coords) => {
+        if (!isConnected(stateProps.level.map))
+          dispatch(rotateTile(coords));
+      }
+    }
+  },
 )(LevelCell);

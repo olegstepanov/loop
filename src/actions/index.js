@@ -1,6 +1,7 @@
 export const nextLevel = () => {
   return {
-    type: 'NEXT_LEVEL'
+    type: 'NEXT_LEVEL',
+    size: 8
   }
 }
 
