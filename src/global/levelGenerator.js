@@ -29,8 +29,58 @@ const shuffle = level => {
   return clone;
 }
 
+const addLoop = (level, startRow, startColumn, length) => {
+  const rows = level.length;
+  const columns = level[0].length;
+
+  for (var i = 0; i < 1000; i++) {
+    var currentRow = startRow;
+    var currentColumn = startColumn;
+    var newLevel = cloneLevel(level);
+
+    for (var step = 0; step < length; step++) {
+      var direction;
+      var nextRow = currentRow;
+      var nextColumn = currentColumn;
+      while (true) {
+        direction = DIRECTIONS[randomInRange(0, 4)];
+        switch (direction) {
+          case Sides.UP:
+            if (nextRow == 0) continue;
+            nextRow--;
+            break;
+          case Sides.RIGHT:
+            if (nextColumn == (columns - 1)) continue;
+            nextColumn++;
+            break;
+          case Sides.DOWN:
+            if (nextRow == (rows - 1)) continue;
+            nextRow++;
+            break;
+          case Sides.LEFT:
+            if (nextColumn == 0) continue;
+            nextColumn--;
+            break;
+        }
+        break;
+      }
+
+      newLevel[currentRow][currentColumn] |= direction
+      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+      currentRow = nextRow;
+      currentColumn = nextColumn;
+
+      if (step >= 4 && (currentRow == startRow) && (currentColumn == startColumn)) {
+          return newLevel;
+      }
+    }
+  }
+
+  return level;
+}
+
 const loopBasedLevelBuilder = (rows, columns) => {
-  var confirmedLevel = emptyLevel(rows, columns);
+  var level = emptyLevel(rows, columns);
   const loops = randomInRange(4, 10);
 
   for (var loop = 0; loop < loops; loop++) {
@@ -38,54 +88,23 @@ const loopBasedLevelBuilder = (rows, columns) => {
     const startColumn = randomInRange(0, columns);
     const length = randomInRange(4, 15);
 
-    attempts: for (var i = 0; i < 1000; i++) {
-      var currentRow = startRow;
-      var currentColumn = startColumn;
-      var level = cloneLevel(confirmedLevel);
-
-      //console.log("New attempt");
-
-      for (var step = 0; step < length; step++) {
-        var direction;
-        var nextRow = currentRow;
-        var nextColumn = currentColumn;
-        while (true) {
-          direction = DIRECTIONS[randomInRange(0, 4)];
-          switch (direction) {
-            case Sides.UP:
-              if (nextRow == 0) continue;
-              nextRow--;
-              break;
-            case Sides.RIGHT:
-              if (nextColumn == (columns - 1)) continue;
-              nextColumn++;
-              break;
-            case Sides.DOWN:
-              if (nextRow == (rows - 1)) continue;
-              nextRow++;
-              break;
-            case Sides.LEFT:
-              if (nextColumn == 0) continue;
-              nextColumn--;
-              break;
-          }
-          break;
-        }
-
-        level[currentRow][currentColumn] |= direction
-        level[nextRow][nextColumn] |= oppositeDirection(direction);
-        currentRow = nextRow;
-        currentColumn = nextColumn;
-
-        if (step >= 4 && (currentRow == startRow) && (currentColumn == startColumn)) {
-            confirmedLevel = level;
-            break attempts;
-        }
-      }
-    }
+    level = addLoop(level, startRow, startColumn, length);
   }
 
-  return confirmedLevel;
+  return level;
+}
+
+const symmetricLevelBuilder = (rows, columns) => {
+  if ((columns % 2) != 0)
+    throw Error("Level width must be even for symmetry");
+
+  for (var loop = 0; loop < loops; loop++) {
+    const startRow = randomInRange(0, rows);
+    const startColumn = randomInRange(0, columns);
+    const length = randomInRange(4, 15);
+
+    level = addLoop(level, startRow, startColumn, length);
+  }
 }
 
 /*
@@ -160,8 +179,7 @@ const simpleLevelGenerator = (rows, columns) => {
 }
 
 const levelGenerator = (rows, columns) => {
-  const level = loopBasedLevelBuilder(rows, columns);
-  return shuffle(level);
+  const level = loopBasedLevelBuilder(rows, columns); return shuffle(level);
   //return simpleLevelGenerator(rows, columns);
 }
 

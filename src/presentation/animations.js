@@ -8,6 +8,9 @@ const COLOR_PATTERNS = [
   ['#bce0f2', '#105577', '#0491d8']
 ];
 
+var currentPattern = -1;
+var currentColors = null;
+
 const toHexString = (rgbString) => {
   var parts = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
   console.log(parts);
@@ -20,7 +23,7 @@ const toHexString = (rgbString) => {
   return hexString;
 }
 
-const getCurrentPattern = () => {
+const eveluateCurrentPattern = () => {
   var currentBgcolor = toHexString($(document.body).css('backgroundColor'));
   console.log(currentBgcolor);
   var currentPattern = -1;
@@ -32,32 +35,69 @@ const getCurrentPattern = () => {
   return currentPattern;
 }
 
-const pickColors = () => {
-  const currentPattern = getCurrentPattern();
+const pickPattern = () => {
   while(true) {
     const pattern = randomInRange(0, COLOR_PATTERNS.length);
     if (pattern != currentPattern)
-      return COLOR_PATTERNS[pattern];
+      return pattern;
   }
 }
 
+const findBackgroundAnimationRule = () => {
+  for (const stylesheet of document.styleSheets) {
+    for (const rule of stylesheet.cssRules) {
+      if (rule.name == 'backgroundAnimation')
+        return rule;
+    }
+  }
+  return null;
+}
+
+const animateTo = (newColors) => {
+  const rule = findBackgroundAnimationRule();
+  if (rule == null) {
+    console.error("Could not find @keyframes rule for backgroundAnimation");
+    return;
+  }
+
+  rule.deleteRule('0%');
+  rule.deleteRule('100%');
+
+  if (currentColors !== null) {
+    rule.appendRule('0% { background-color: ' + currentColors.backgroundColor +
+                    '; color: ' + currentColors.color + '; fill: ' + currentColors.fill + '}');
+  }
+
+  rule.appendRule('100% { background-color: ' + newColors.backgroundColor +
+                  '; color: ' + newColors.color + '; fill: ' + newColors.fill + '}')
+
+  currentColors = newColors;
+
+  $(document.body).css({ animationName: 'backgroundAnimation' });
+}
+
 const setNextColors = () => {
-  const pattern = pickColors();
-  $(document.body).css({
-    backgroundColor: pattern[0],
-    color: pattern[1],
-    fill: pattern[1]
-  })
+  const pattern = pickPattern();
+  const colors = COLOR_PATTERNS[pattern];
+
+  animateTo({
+    backgroundColor: colors[0],
+    color: colors[1],
+    fill: colors[1]
+  });
+
+  currentPattern = pattern;
 }
 
 const invertColors = () => {
-  const pattern = COLOR_PATTERNS[getCurrentPattern()];
-  console.log(pattern);
-  $(document.body).css({
-    backgroundColor: pattern[1],
-    color: pattern[2],
-    fill: pattern[2]
-  })
+  const pattern = currentPattern;
+  const colors = COLOR_PATTERNS[pattern];
+
+  animateTo({
+    backgroundColor: colors[1],
+    color: colors[2],
+    fill: colors[2]
+  });
 }
 
 export {setNextColors, invertColors}
