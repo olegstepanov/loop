@@ -6903,8 +6903,58 @@ var shuffle = function shuffle(level) {
   return clone;
 };
 
+var addLoop = function addLoop(level, startRow, startColumn, length) {
+  var rows = level.length;
+  var columns = level[0].length;
+
+  for (var i = 0; i < 1000; i++) {
+    var currentRow = startRow;
+    var currentColumn = startColumn;
+    var newLevel = cloneLevel(level);
+
+    for (var step = 0; step < length; step++) {
+      var direction;
+      var nextRow = currentRow;
+      var nextColumn = currentColumn;
+      while (true) {
+        direction = DIRECTIONS[(0, _utils.randomInRange)(0, 4)];
+        switch (direction) {
+          case _Tiles.Sides.UP:
+            if (nextRow == 0) continue;
+            nextRow--;
+            break;
+          case _Tiles.Sides.RIGHT:
+            if (nextColumn == columns - 1) continue;
+            nextColumn++;
+            break;
+          case _Tiles.Sides.DOWN:
+            if (nextRow == rows - 1) continue;
+            nextRow++;
+            break;
+          case _Tiles.Sides.LEFT:
+            if (nextColumn == 0) continue;
+            nextColumn--;
+            break;
+        }
+        break;
+      }
+
+      newLevel[currentRow][currentColumn] |= direction;
+      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+      currentRow = nextRow;
+      currentColumn = nextColumn;
+
+      if (step >= 4 && currentRow == startRow && currentColumn == startColumn) {
+        return newLevel;
+      }
+    }
+  }
+
+  return level;
+};
+
 var loopBasedLevelBuilder = function loopBasedLevelBuilder(rows, columns) {
-  var confirmedLevel = emptyLevel(rows, columns);
+  var level = emptyLevel(rows, columns);
   var loops = (0, _utils.randomInRange)(4, 10);
 
   for (var loop = 0; loop < loops; loop++) {
@@ -6912,54 +6962,22 @@ var loopBasedLevelBuilder = function loopBasedLevelBuilder(rows, columns) {
     var startColumn = (0, _utils.randomInRange)(0, columns);
     var length = (0, _utils.randomInRange)(4, 15);
 
-    attempts: for (var i = 0; i < 1000; i++) {
-      var currentRow = startRow;
-      var currentColumn = startColumn;
-      var level = cloneLevel(confirmedLevel);
-
-      //console.log("New attempt");
-
-      for (var step = 0; step < length; step++) {
-        var direction;
-        var nextRow = currentRow;
-        var nextColumn = currentColumn;
-        while (true) {
-          direction = DIRECTIONS[(0, _utils.randomInRange)(0, 4)];
-          switch (direction) {
-            case _Tiles.Sides.UP:
-              if (nextRow == 0) continue;
-              nextRow--;
-              break;
-            case _Tiles.Sides.RIGHT:
-              if (nextColumn == columns - 1) continue;
-              nextColumn++;
-              break;
-            case _Tiles.Sides.DOWN:
-              if (nextRow == rows - 1) continue;
-              nextRow++;
-              break;
-            case _Tiles.Sides.LEFT:
-              if (nextColumn == 0) continue;
-              nextColumn--;
-              break;
-          }
-          break;
-        }
-
-        level[currentRow][currentColumn] |= direction;
-        level[nextRow][nextColumn] |= oppositeDirection(direction);
-        currentRow = nextRow;
-        currentColumn = nextColumn;
-
-        if (step >= 4 && currentRow == startRow && currentColumn == startColumn) {
-          confirmedLevel = level;
-          break attempts;
-        }
-      }
-    }
+    level = addLoop(level, startRow, startColumn, length);
   }
 
-  return confirmedLevel;
+  return level;
+};
+
+var symmetricLevelBuilder = function symmetricLevelBuilder(rows, columns) {
+  if (columns % 2 != 0) throw Error("Level width must be even for symmetry");
+
+  for (var loop = 0; loop < loops; loop++) {
+    var startRow = (0, _utils.randomInRange)(0, rows);
+    var startColumn = (0, _utils.randomInRange)(0, columns);
+    var length = (0, _utils.randomInRange)(4, 15);
+
+    level = addLoop(level, startRow, startColumn, length);
+  }
 };
 
 /*
@@ -7100,8 +7118,7 @@ var simpleLevelGenerator = function simpleLevelGenerator(rows, columns) {
 };
 
 var levelGenerator = function levelGenerator(rows, columns) {
-  var level = loopBasedLevelBuilder(rows, columns);
-  return shuffle(level);
+  var level = loopBasedLevelBuilder(rows, columns);return shuffle(level);
   //return simpleLevelGenerator(rows, columns);
 };
 
@@ -52843,6 +52860,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var COLOR_PATTERNS = [['#c9d8c5', '#387229', '#5ff736'], ['#f2ece1', '#5b5037', '#f2ad0c'], ['#bce0f2', '#105577', '#0491d8']];
 
+var currentPattern = -1;
+var currentColors = null;
+
 var toHexString = function toHexString(rgbString) {
   var parts = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
   console.log(parts);
@@ -52855,7 +52875,7 @@ var toHexString = function toHexString(rgbString) {
   return hexString;
 };
 
-var getCurrentPattern = function getCurrentPattern() {
+var eveluateCurrentPattern = function eveluateCurrentPattern() {
   var currentBgcolor = toHexString((0, _jquery2.default)(document.body).css('backgroundColor'));
   console.log(currentBgcolor);
   var currentPattern = -1;
@@ -52867,30 +52887,106 @@ var getCurrentPattern = function getCurrentPattern() {
   }return currentPattern;
 };
 
-var pickColors = function pickColors() {
-  var currentPattern = getCurrentPattern();
+var pickPattern = function pickPattern() {
   while (true) {
     var pattern = (0, _utils.randomInRange)(0, COLOR_PATTERNS.length);
-    if (pattern != currentPattern) return COLOR_PATTERNS[pattern];
+    if (pattern != currentPattern) return pattern;
   }
 };
 
+var findBackgroundAnimationRule = function findBackgroundAnimationRule() {
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = document.styleSheets[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var stylesheet = _step.value;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = stylesheet.cssRules[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var rule = _step2.value;
+
+          if (rule.name == 'backgroundAnimation') return rule;
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return null;
+};
+
+var animateTo = function animateTo(newColors) {
+  var rule = findBackgroundAnimationRule();
+  if (rule == null) {
+    console.error("Could not find @keyframes rule for backgroundAnimation");
+    return;
+  }
+
+  rule.deleteRule('0%');
+  rule.deleteRule('100%');
+
+  if (currentColors !== null) {
+    rule.appendRule('0% { background-color: ' + currentColors.backgroundColor + '; color: ' + currentColors.color + '; fill: ' + currentColors.fill + '}');
+  }
+
+  rule.appendRule('100% { background-color: ' + newColors.backgroundColor + '; color: ' + newColors.color + '; fill: ' + newColors.fill + '}');
+
+  currentColors = newColors;
+
+  (0, _jquery2.default)(document.body).css({ animationName: 'backgroundAnimation' });
+};
+
 var setNextColors = function setNextColors() {
-  var pattern = pickColors();
-  (0, _jquery2.default)(document.body).css({
-    backgroundColor: pattern[0],
-    color: pattern[1],
-    fill: pattern[1]
+  var pattern = pickPattern();
+  var colors = COLOR_PATTERNS[pattern];
+
+  animateTo({
+    backgroundColor: colors[0],
+    color: colors[1],
+    fill: colors[1]
   });
+
+  currentPattern = pattern;
 };
 
 var invertColors = function invertColors() {
-  var pattern = COLOR_PATTERNS[getCurrentPattern()];
-  console.log(pattern);
-  (0, _jquery2.default)(document.body).css({
-    backgroundColor: pattern[1],
-    color: pattern[2],
-    fill: pattern[2]
+  var pattern = currentPattern;
+  var colors = COLOR_PATTERNS[pattern];
+
+  animateTo({
+    backgroundColor: colors[1],
+    color: colors[2],
+    fill: colors[2]
   });
 };
 
