@@ -12,9 +12,24 @@ const oppositeDirection = direction => {
   }
 }
 
-const emptyLevel = (rows, columns) => Array(rows).fill().map(_ => Array(columns).fill())
+const emptyLevel = (rows, columns) => Array(rows).fill().map(_ => Array(columns).fill(0))
 
 const cloneLevel = level => level.map(row => [...row])
+
+const getFillFactor = level => (0.0 + _.sum(level.map(row => _.takeRightWhile(row.slice().sort(), c => c > 0).length))) / (level.length * level[0].length)
+
+const expectedFillFactor = index => {
+  var fillFactor;
+
+  if (index < 3)
+    fillFactor = 0.3;
+  else if (index < 10)
+    fillFactor = 0.5;
+  else
+    fillFactor = 0.7;
+
+  return fillFactor;
+}
 
 const shuffle = level => {
   var clone = cloneLevel(level)
@@ -29,82 +44,165 @@ const shuffle = level => {
   return clone;
 }
 
-const addLoop = (level, startRow, startColumn, length) => {
+const addLoop = (level) => {
   const rows = level.length;
   const columns = level[0].length;
+  const startRow = randomInRange(0, rows);
+  const startColumn = randomInRange(0, columns);
+  const length = randomInRange(4, 10);
 
-  for (var i = 0; i < 1000; i++) {
-    var currentRow = startRow;
-    var currentColumn = startColumn;
-    var newLevel = cloneLevel(level);
+  var currentRow = startRow;
+  var currentColumn = startColumn;
+  var newLevel = cloneLevel(level);
 
-    for (var step = 0; step < length; step++) {
-      var direction;
-      var nextRow = currentRow;
-      var nextColumn = currentColumn;
-      while (true) {
-        direction = DIRECTIONS[randomInRange(0, 4)];
-        switch (direction) {
-          case Sides.UP:
-            if (nextRow == 0) continue;
-            nextRow--;
-            break;
-          case Sides.RIGHT:
-            if (nextColumn == (columns - 1)) continue;
-            nextColumn++;
-            break;
-          case Sides.DOWN:
-            if (nextRow == (rows - 1)) continue;
-            nextRow++;
-            break;
-          case Sides.LEFT:
-            if (nextColumn == 0) continue;
-            nextColumn--;
-            break;
-        }
-        break;
+  for (var step = 0; step < length; step++) {
+    var direction;
+    var nextRow = currentRow;
+    var nextColumn = currentColumn;
+
+    console.log('Going from (' + currentRow + ', ' + currentColumn + ')');
+
+    for (direction of _.shuffle(DIRECTIONS)) {
+      switch (direction) {
+        case Sides.UP:
+          if (currentRow == 0) continue;
+          nextRow = currentRow - 1;
+          break;
+        case Sides.RIGHT:
+          if (currentColumn == columns - 1) continue;
+          nextColumn = currentColumn + 1;
+          break;
+        case Sides.DOWN:
+          if (currentRow == rows - 1) continue;
+          nextRow = currentRow + 1;
+          break;
+        case Sides.LEFT:
+          if (currentColumn == 0) continue;
+          nextColumn = currentColumn - 1;
+          break;
       }
+      break;
+    }
 
-      newLevel[currentRow][currentColumn] |= direction
-      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
-      currentRow = nextRow;
-      currentColumn = nextColumn;
+    console.log('Direction: ' + direction);
+    console.log('To (' + nextColumn + ', ' + nextRow + ')');
 
-      if (step >= 4 && (currentRow == startRow) && (currentColumn == startColumn)) {
-          return newLevel;
-      }
+    newLevel[currentRow][currentColumn] |= direction
+    newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+    currentRow = nextRow;
+    currentColumn = nextColumn;
+
+    if (step >= 4 && (currentRow == startRow) && (currentColumn == startColumn)) {
+        return newLevel;
     }
   }
 
   return level;
 }
 
-const loopBasedLevelBuilder = (rows, columns) => {
+const loopBasedLevelBuilder = (rows, columns, index) => {
   var level = emptyLevel(rows, columns);
-  const loops = randomInRange(4, 10);
+  const fillFactor = expectedFillFactor(index);
 
-  for (var loop = 0; loop < loops; loop++) {
-    const startRow = randomInRange(0, rows);
-    const startColumn = randomInRange(0, columns);
-    const length = randomInRange(4, 15);
-
-    level = addLoop(level, startRow, startColumn, length);
+  while (getFillFactor(level) < fillFactor) {
+    console.log('Attempting');
+    level = addLoop(level);
   }
 
   return level;
 }
 
-const symmetricLevelBuilder = (rows, columns) => {
+const addLoopToLeftHalf = (level) => {
+  const rows = level.length;
+  const columns = level[0].length;
+  const startRow = randomInRange(0, rows);
+  const startColumn = columns / 2 - 1;
+  const length = randomInRange(4, 6);
+
+
+  var currentRow = startRow;
+  var currentColumn = startColumn;
+  var newLevel = cloneLevel(level);
+  var cellsInLoop = [];
+  var logs = [];
+
+  for (var step = 0; step < length; step++) {
+    var direction;
+    var nextRow;
+    var nextColumn;
+
+    cellsInLoop = [...cellsInLoop, [currentRow, currentColumn]];
+
+    logs.push('Going from (' +
+    currentRow + ', ' + currentColumn + ')');
+
+    for (direction of _.shuffle(DIRECTIONS)) {
+      nextRow = currentRow;
+      nextColumn = currentColumn;
+
+      switch (direction) {
+        case Sides.UP:
+          if (currentRow <= 0) continue;
+          nextRow = currentRow - 1;
+          break;
+        case Sides.RIGHT:
+          nextColumn = currentColumn + 1;
+          break;
+        case Sides.DOWN:
+          if (currentRow >= (rows - 1)) continue;
+          nextRow = nextRow + 1;
+          break;
+        case Sides.LEFT:
+          if (currentRow <= 0) continue;
+          nextColumn = nextColumn - 1;
+          break;
+      }
+
+      if (_.find(cellsInLoop, [nextRow, nextColumn]) &&
+          !_.isEqual([startRow, startColumn], [nextRow, nextColumn]))
+        continue;
+
+      logs.push('to (' + nextRow + ', ' + nextColumn + ')');
+
+      break;
+    }
+
+    logs.push('Direction: ' + direction);
+    logs.push('Opposite direction: ' + oppositeDirection(direction));
+    newLevel[currentRow][currentColumn] |= direction;
+    if (nextColumn < columns) {
+      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+      currentRow = nextRow;
+      currentColumn = nextColumn;
+    } else {
+      for (const log of logs)
+        console.log(log);
+      console.log("Adding loop");
+      console.log(newLevel);
+      return newLevel;
+    }
+  }
+
+  console.log("Failure");
+
+  return level;
+}
+
+const symmetricLevelBuilder = (rows, columns, index) => {
   if ((columns % 2) != 0)
     throw Error("Level width must be even for symmetry");
 
-  for (var loop = 0; loop < loops; loop++) {
-    const startRow = randomInRange(0, rows);
-    const startColumn = randomInRange(0, columns);
-    const length = randomInRange(4, 15);
+  var leftHalf = emptyLevel(rows, columns / 2);
+  const fillFactor = expectedFillFactor(index);
 
-    level = addLoop(level, startRow, startColumn, length);
+  while (getFillFactor(leftHalf) < fillFactor) {
+    if (Math.random() > 0.3)
+      leftHalf = addLoop(leftHalf);
+    else
+      leftHalf = addLoopToLeftHalf(leftHalf);
   }
+
+  return leftHalf.map(row => [...row, ...row.slice().reverse()]);
 }
 
 /*
@@ -169,8 +267,8 @@ const randomLevelBuilder = (rows, columns) => {
   return null;
 };
 
-const simpleLevelGenerator = (rows, columns) => {
-  var level = emptyLevel(rows, columns);
+const simpleLevelGenerator = () => {
+  var level = emptyLevel(2, 2);
   level[0][0] = Sides.UP | Sides.LEFT;
   level[0][1] = Sides.UP | Sides.RIGHT;
   level[1][0] = Sides.UP | Sides.RIGHT;
@@ -178,10 +276,39 @@ const simpleLevelGenerator = (rows, columns) => {
   return level;
 }
 
-const levelGenerator = (rows, columns) => {
-  const level = loopBasedLevelBuilder(rows, columns); return shuffle(level);
-  //return simpleLevelGenerator(rows, columns);
+const generateLevel = (index) => {
+  if (index == 0)
+    return simpleLevelGenerator(rows, columns);
+
+  var rows;
+  var columns;
+
+  if (index < 3)
+    rows = columns = 4;
+  else if (index < 10)
+    rows = columns = 6;
+  else if (index < 20)
+    rows = columns = 8;
+  else
+    rows = columns = 10;
+
+  var level;
+  if (Math.random() >= 0.5) {
+    console.log("Building symmetric level");
+    level = symmetricLevelBuilder(rows, columns, index);
+  }
+  else {
+    console.log("Building asymmetric level");
+    level = loopBasedLevelBuilder(rows, columns);
+  }
+
+  if (level == null) {
+    console.error("Could not generate level");
+    return [];
+  }
+
+  return shuffle(level);
 }
 
-export { isConnected, levelGenerator };
-export default levelGenerator;
+export { isConnected, generateLevel };
+export default generateLevel;

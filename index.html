@@ -61,7 +61,6 @@
     }
 
     body {
-      text-align: center;
       margin: 0;
       padding: 0;
       user-select: none;
@@ -74,22 +73,21 @@
     }
 
     #content {
-      display: inline-block;
-      vertical-align: middle;
-    }
+      padding-top: 100px;
+      padding-bottom: 60px;
 
-    body:before {
-      content: "";
-      display: inline-block;
-      vertical-align: middle;
-      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .footer {
       font-size: 10px;
-      padding-top: 10px;
-      text-align: left;
-      opacity: 0.5;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      padding-bottom: 10px;
     }
 
     table {
@@ -114,10 +112,10 @@
     <div id="content">
       <div id="root" >
       </div>
+    </div>
 
-      <div class="footer">
-        <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a> (<a href="https://github.com/olegstepanov/loop">source code</a>). Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
-      </div>
+    <div class="footer">
+      <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a> (<a href="https://github.com/olegstepanov/loop">source code</a>). Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
     </div>
 
     <script src="bundle.js"></script>

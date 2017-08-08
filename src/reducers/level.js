@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { Tiles, rotateTile } from '../global/Tiles'
-import { levelGenerator, isConnected } from '../global/levelGenerator'
+import { generateLevel, isConnected } from '../global/levelGenerator'
 
 const pickRandomTile = () => {
   const tileSet = Math.floor(Math.random() * Tiles.length);
@@ -9,16 +9,11 @@ const pickRandomTile = () => {
   return { tileSet, index };
 }
 
-const generateLevel = size => {
-  const level = levelGenerator(size, size);
-  if (level == null)
-    console.error("Could not generate connected level");
-  return level;
-}
-
-const level = (state = {map: []}, action) => {
+const level = (state = {index: -1, map: []}, action) => {
   switch (action.type) {
-    case 'NEXT_LEVEL': return { map: generateLevel(action.size) };
+    case 'NEXT_LEVEL':
+      const index = state.index + 1;
+      return { index, map: generateLevel(index) };
     case 'ROTATE_TILE':
       const rowIndex = action.coords.rowIndex;
       const columnIndex = action.coords.columnIndex;
