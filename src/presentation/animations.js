@@ -44,8 +44,9 @@ const pickPattern = () => {
 }
 
 const findBackgroundAnimationRule = () => {
-  for (const stylesheet of document.styleSheets) {
-    for (const rule of stylesheet.cssRules) {
+  for (const stylesheet of Array.from(document.styleSheets)) {
+    if (stylesheet.cssRules === null) continue;
+    for (const rule of Array.from(stylesheet.cssRules)) {
       if (rule.name == 'backgroundAnimation')
         return rule;
     }

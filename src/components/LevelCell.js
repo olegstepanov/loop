@@ -112,7 +112,7 @@ class LevelCell extends React.Component {
     const className = hasRotated ? 'rotatedTile' : 'staticTile';
     return (
       <div className={className} style={styles.div}>
-        <svg width={styles.size} height={styles.size } onClick={() => onTileClicked(coords)}>
+        <svg width={styles.size} height={styles.size } preserveAspectRatio="xMinYMin meet" onClick={() => onTileClicked(coords)}>
           {content}
         </svg>
       </div>

@@ -6855,7 +6855,7 @@ module.exports = g;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.levelGenerator = exports.isConnected = undefined;
+exports.generateLevel = exports.isConnected = undefined;
 
 var _Tiles = __webpack_require__(34);
 
@@ -6880,7 +6880,7 @@ var oppositeDirection = function oppositeDirection(direction) {
 
 var emptyLevel = function emptyLevel(rows, columns) {
   return Array(rows).fill().map(function (_) {
-    return Array(columns).fill();
+    return Array(columns).fill(0);
   });
 };
 
@@ -6888,6 +6888,22 @@ var cloneLevel = function cloneLevel(level) {
   return level.map(function (row) {
     return [].concat(_toConsumableArray(row));
   });
+};
+
+var getFillFactor = function getFillFactor(level) {
+  return (0.0 + _.sum(level.map(function (row) {
+    return _.takeRightWhile(row.slice().sort(), function (c) {
+      return c > 0;
+    }).length;
+  }))) / (level.length * level[0].length);
+};
+
+var expectedFillFactor = function expectedFillFactor(index) {
+  var fillFactor;
+
+  if (index < 3) fillFactor = 0.3;else if (index < 10) fillFactor = 0.5;else fillFactor = 0.7;
+
+  return fillFactor;
 };
 
 var shuffle = function shuffle(level) {
@@ -6903,81 +6919,224 @@ var shuffle = function shuffle(level) {
   return clone;
 };
 
-var addLoop = function addLoop(level, startRow, startColumn, length) {
+var addLoop = function addLoop(level) {
   var rows = level.length;
   var columns = level[0].length;
+  var startRow = (0, _utils.randomInRange)(0, rows);
+  var startColumn = (0, _utils.randomInRange)(0, columns);
+  var length = (0, _utils.randomInRange)(4, 10);
 
-  for (var i = 0; i < 1000; i++) {
-    var currentRow = startRow;
-    var currentColumn = startColumn;
-    var newLevel = cloneLevel(level);
+  var currentRow = startRow;
+  var currentColumn = startColumn;
+  var newLevel = cloneLevel(level);
 
-    for (var step = 0; step < length; step++) {
-      var direction;
-      var nextRow = currentRow;
-      var nextColumn = currentColumn;
-      while (true) {
-        direction = DIRECTIONS[(0, _utils.randomInRange)(0, 4)];
+  for (var step = 0; step < length; step++) {
+    var direction;
+    var nextRow = currentRow;
+    var nextColumn = currentColumn;
+
+    console.log('Going from (' + currentRow + ', ' + currentColumn + ')');
+
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = _.shuffle(DIRECTIONS)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        direction = _step.value;
+
         switch (direction) {
           case _Tiles.Sides.UP:
-            if (nextRow == 0) continue;
-            nextRow--;
+            if (currentRow == 0) continue;
+            nextRow = currentRow - 1;
             break;
           case _Tiles.Sides.RIGHT:
-            if (nextColumn == columns - 1) continue;
-            nextColumn++;
+            if (currentColumn == columns - 1) continue;
+            nextColumn = currentColumn + 1;
             break;
           case _Tiles.Sides.DOWN:
-            if (nextRow == rows - 1) continue;
-            nextRow++;
+            if (currentRow == rows - 1) continue;
+            nextRow = currentRow + 1;
             break;
           case _Tiles.Sides.LEFT:
-            if (nextColumn == 0) continue;
-            nextColumn--;
+            if (currentColumn == 0) continue;
+            nextColumn = currentColumn - 1;
             break;
         }
         break;
       }
-
-      newLevel[currentRow][currentColumn] |= direction;
-      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
-      currentRow = nextRow;
-      currentColumn = nextColumn;
-
-      if (step >= 4 && currentRow == startRow && currentColumn == startColumn) {
-        return newLevel;
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
       }
+    }
+
+    console.log('Direction: ' + direction);
+    console.log('To (' + nextColumn + ', ' + nextRow + ')');
+
+    newLevel[currentRow][currentColumn] |= direction;
+    newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+    currentRow = nextRow;
+    currentColumn = nextColumn;
+
+    if (step >= 4 && currentRow == startRow && currentColumn == startColumn) {
+      return newLevel;
     }
   }
 
   return level;
 };
 
-var loopBasedLevelBuilder = function loopBasedLevelBuilder(rows, columns) {
+var loopBasedLevelBuilder = function loopBasedLevelBuilder(rows, columns, index) {
   var level = emptyLevel(rows, columns);
-  var loops = (0, _utils.randomInRange)(4, 10);
+  var fillFactor = expectedFillFactor(index);
 
-  for (var loop = 0; loop < loops; loop++) {
-    var startRow = (0, _utils.randomInRange)(0, rows);
-    var startColumn = (0, _utils.randomInRange)(0, columns);
-    var length = (0, _utils.randomInRange)(4, 15);
-
-    level = addLoop(level, startRow, startColumn, length);
+  while (getFillFactor(level) < fillFactor) {
+    console.log('Attempting');
+    level = addLoop(level);
   }
 
   return level;
 };
 
-var symmetricLevelBuilder = function symmetricLevelBuilder(rows, columns) {
+var addLoopToLeftHalf = function addLoopToLeftHalf(level) {
+  var rows = level.length;
+  var columns = level[0].length;
+  var startRow = (0, _utils.randomInRange)(0, rows);
+  var startColumn = columns / 2 - 1;
+  var length = (0, _utils.randomInRange)(4, 6);
+
+  var currentRow = startRow;
+  var currentColumn = startColumn;
+  var newLevel = cloneLevel(level);
+  var cellsInLoop = [];
+  var logs = [];
+
+  for (var step = 0; step < length; step++) {
+    var direction;
+    var nextRow;
+    var nextColumn;
+
+    cellsInLoop = [].concat(_toConsumableArray(cellsInLoop), [[currentRow, currentColumn]]);
+
+    logs.push('Going from (' + currentRow + ', ' + currentColumn + ')');
+
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = _.shuffle(DIRECTIONS)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        direction = _step2.value;
+
+        nextRow = currentRow;
+        nextColumn = currentColumn;
+
+        switch (direction) {
+          case _Tiles.Sides.UP:
+            if (currentRow <= 0) continue;
+            nextRow = currentRow - 1;
+            break;
+          case _Tiles.Sides.RIGHT:
+            nextColumn = currentColumn + 1;
+            break;
+          case _Tiles.Sides.DOWN:
+            if (currentRow >= rows - 1) continue;
+            nextRow = nextRow + 1;
+            break;
+          case _Tiles.Sides.LEFT:
+            if (currentRow <= 0) continue;
+            nextColumn = nextColumn - 1;
+            break;
+        }
+
+        if (_.find(cellsInLoop, [nextRow, nextColumn]) && !_.isEqual([startRow, startColumn], [nextRow, nextColumn])) continue;
+
+        logs.push('to (' + nextRow + ', ' + nextColumn + ')');
+
+        break;
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    logs.push('Direction: ' + direction);
+    logs.push('Opposite direction: ' + oppositeDirection(direction));
+    newLevel[currentRow][currentColumn] |= direction;
+    if (nextColumn < columns) {
+      newLevel[nextRow][nextColumn] |= oppositeDirection(direction);
+      currentRow = nextRow;
+      currentColumn = nextColumn;
+    } else {
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
+
+      try {
+        for (var _iterator3 = logs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var log = _step3.value;
+
+          console.log(log);
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3.return) {
+            _iterator3.return();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
+      }
+
+      console.log("Adding loop");
+      console.log(newLevel);
+      return newLevel;
+    }
+  }
+
+  console.log("Failure");
+
+  return level;
+};
+
+var symmetricLevelBuilder = function symmetricLevelBuilder(rows, columns, index) {
   if (columns % 2 != 0) throw Error("Level width must be even for symmetry");
 
-  for (var loop = 0; loop < loops; loop++) {
-    var startRow = (0, _utils.randomInRange)(0, rows);
-    var startColumn = (0, _utils.randomInRange)(0, columns);
-    var length = (0, _utils.randomInRange)(4, 15);
+  var leftHalf = emptyLevel(rows, columns / 2);
+  var fillFactor = expectedFillFactor(index);
 
-    level = addLoop(level, startRow, startColumn, length);
+  while (getFillFactor(leftHalf) < fillFactor) {
+    if (Math.random() > 0.3) leftHalf = addLoop(leftHalf);else leftHalf = addLoopToLeftHalf(leftHalf);
   }
+
+  return leftHalf.map(function (row) {
+    return [].concat(_toConsumableArray(row), _toConsumableArray(row.slice().reverse()));
+  });
 };
 
 /*
@@ -6988,36 +7147,36 @@ Each tile is a 4-bit integer: 3210 where
 */
 var isConnected = function isConnected(level) {
   var foundNonEmptyCell = false;
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
+  var _iteratorNormalCompletion4 = true;
+  var _didIteratorError4 = false;
+  var _iteratorError4 = undefined;
 
   try {
-    for (var _iterator = level.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var rowIndex = _step.value;
+    for (var _iterator4 = level.keys()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+      var rowIndex = _step4.value;
 
       var firstRow = rowIndex == 0;
       var lastRow = rowIndex == level.length - 1;
 
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
 
       try {
-        for (var _iterator2 = level[rowIndex].keys()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var columnIndex = _step2.value;
+        for (var _iterator5 = level[rowIndex].keys()[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var columnIndex = _step5.value;
 
           var firstColumn = columnIndex == 0;
           var lastColumn = columnIndex == level[rowIndex].length - 1;
 
           var cell = level[rowIndex][columnIndex];
-          var _iteratorNormalCompletion3 = true;
-          var _didIteratorError3 = false;
-          var _iteratorError3 = undefined;
+          var _iteratorNormalCompletion6 = true;
+          var _didIteratorError6 = false;
+          var _iteratorError6 = undefined;
 
           try {
-            for (var _iterator3 = DIRECTIONS[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-              var side = _step3.value;
+            for (var _iterator6 = DIRECTIONS[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              var side = _step6.value;
 
               if ((cell & side) != 0) {
                 foundNonEmptyCell = true;
@@ -7046,46 +7205,46 @@ var isConnected = function isConnected(level) {
               }
             }
           } catch (err) {
-            _didIteratorError3 = true;
-            _iteratorError3 = err;
+            _didIteratorError6 = true;
+            _iteratorError6 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                _iterator3.return();
+              if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                _iterator6.return();
               }
             } finally {
-              if (_didIteratorError3) {
-                throw _iteratorError3;
+              if (_didIteratorError6) {
+                throw _iteratorError6;
               }
             }
           }
         }
       } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
+          if (!_iteratorNormalCompletion5 && _iterator5.return) {
+            _iterator5.return();
           }
         } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
+          if (_didIteratorError5) {
+            throw _iteratorError5;
           }
         }
       }
     }
   } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
+    _didIteratorError4 = true;
+    _iteratorError4 = err;
   } finally {
     try {
-      if (!_iteratorNormalCompletion && _iterator.return) {
-        _iterator.return();
+      if (!_iteratorNormalCompletion4 && _iterator4.return) {
+        _iterator4.return();
       }
     } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
+      if (_didIteratorError4) {
+        throw _iteratorError4;
       }
     }
   }
@@ -7108,8 +7267,8 @@ var randomLevelBuilder = function randomLevelBuilder(rows, columns) {
   return null;
 };
 
-var simpleLevelGenerator = function simpleLevelGenerator(rows, columns) {
-  var level = emptyLevel(rows, columns);
+var simpleLevelGenerator = function simpleLevelGenerator() {
+  var level = emptyLevel(2, 2);
   level[0][0] = _Tiles.Sides.UP | _Tiles.Sides.LEFT;
   level[0][1] = _Tiles.Sides.UP | _Tiles.Sides.RIGHT;
   level[1][0] = _Tiles.Sides.UP | _Tiles.Sides.RIGHT;
@@ -7117,14 +7276,34 @@ var simpleLevelGenerator = function simpleLevelGenerator(rows, columns) {
   return level;
 };
 
-var levelGenerator = function levelGenerator(rows, columns) {
-  var level = loopBasedLevelBuilder(rows, columns);return shuffle(level);
-  //return simpleLevelGenerator(rows, columns);
+var generateLevel = function generateLevel(index) {
+  if (index == 0) return simpleLevelGenerator(rows, columns);
+
+  var rows;
+  var columns;
+
+  if (index < 3) rows = columns = 4;else if (index < 10) rows = columns = 6;else if (index < 20) rows = columns = 8;else rows = columns = 10;
+
+  var level;
+  if (Math.random() >= 0.5) {
+    console.log("Building symmetric level");
+    level = symmetricLevelBuilder(rows, columns, index);
+  } else {
+    console.log("Building asymmetric level");
+    level = loopBasedLevelBuilder(rows, columns);
+  }
+
+  if (level == null) {
+    console.error("Could not generate level");
+    return [];
+  }
+
+  return shuffle(level);
 };
 
 exports.isConnected = isConnected;
-exports.levelGenerator = levelGenerator;
-exports.default = levelGenerator;
+exports.generateLevel = generateLevel;
+exports.default = generateLevel;
 
 /***/ }),
 /* 59 */
@@ -39012,6 +39191,8 @@ var _jquery2 = _interopRequireDefault(_jquery);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+console.log = function () {};
+
 var store = (0, _redux.createStore)(_reducers2.default, {});
 
 var render = function render() {
@@ -52701,7 +52882,7 @@ var LevelCell = function (_React$Component) {
         { className: className, style: styles.div },
         _react2.default.createElement(
           'svg',
-          { width: styles.size, height: styles.size, onClick: function onClick() {
+          { width: styles.size, height: styles.size, preserveAspectRatio: 'xMinYMin meet', onClick: function onClick() {
               return onTileClicked(coords);
             } },
           content
@@ -52788,19 +52969,14 @@ var pickRandomTile = function pickRandomTile() {
   return { tileSet: tileSet, index: index };
 };
 
-var generateLevel = function generateLevel(size) {
-  var level = (0, _levelGenerator.levelGenerator)(size, size);
-  if (level == null) console.error("Could not generate connected level");
-  return level;
-};
-
 var level = function level() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { map: [] };
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { index: -1, map: [] };
   var action = arguments[1];
 
   switch (action.type) {
     case 'NEXT_LEVEL':
-      return { map: generateLevel(action.size) };
+      var index = state.index + 1;
+      return { index: index, map: (0, _levelGenerator.generateLevel)(index) };
     case 'ROTATE_TILE':
       var rowIndex = action.coords.rowIndex;
       var columnIndex = action.coords.columnIndex;
@@ -52900,14 +53076,16 @@ var findBackgroundAnimationRule = function findBackgroundAnimationRule() {
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = document.styleSheets[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = Array.from(document.styleSheets)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var stylesheet = _step.value;
+
+      if (stylesheet.cssRules === null) continue;
       var _iteratorNormalCompletion2 = true;
       var _didIteratorError2 = false;
       var _iteratorError2 = undefined;
 
       try {
-        for (var _iterator2 = stylesheet.cssRules[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        for (var _iterator2 = Array.from(stylesheet.cssRules)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
           var rule = _step2.value;
 
           if (rule.name == 'backgroundAnimation') return rule;

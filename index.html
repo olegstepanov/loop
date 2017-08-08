@@ -4,7 +4,7 @@
     <script src="https://fb.me/react-dom-15.1.0.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.0.4/redux.min.js"></script>
 
-    <link rel="stylesheet" href="./node_modules/normalize.css/normalize.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/normalize/7.0.0/normalize.css" />
 
     <style>
     @keyframes rotatedTile0 {
@@ -70,6 +70,10 @@
       animation-duration: 2000ms;
       animation-iteration-count: 1;
       animation-fill-mode: both;
+
+      -webkit-user-select: none; /* Chrome/Safari */
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE */
     }
 
     #content {

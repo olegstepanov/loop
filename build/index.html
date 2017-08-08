@@ -4,7 +4,7 @@
     <script src="https://fb.me/react-dom-15.1.0.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.0.4/redux.min.js"></script>
 
-    <link rel="stylesheet" href="./node_modules/normalize.css/normalize.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/normalize/7.0.0/normalize.css" />
 
     <style>
     @keyframes rotatedTile0 {
@@ -61,7 +61,6 @@
     }
 
     body {
-      text-align: center;
       margin: 0;
       padding: 0;
       user-select: none;
@@ -71,25 +70,28 @@
       animation-duration: 2000ms;
       animation-iteration-count: 1;
       animation-fill-mode: both;
+
+      -webkit-user-select: none; /* Chrome/Safari */
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE */
     }
 
     #content {
-      display: inline-block;
-      vertical-align: middle;
-    }
+      padding-top: 100px;
+      padding-bottom: 60px;
 
-    body:before {
-      content: "";
-      display: inline-block;
-      vertical-align: middle;
-      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .footer {
       font-size: 10px;
-      padding-top: 10px;
-      text-align: left;
-      opacity: 0.5;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      padding-bottom: 10px;
     }
 
     table {
@@ -114,10 +116,10 @@
     <div id="content">
       <div id="root" >
       </div>
+    </div>
 
-      <div class="footer">
-        <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a> (<a href="https://github.com/olegstepanov/loop">source code</a>). Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
-      </div>
+    <div class="footer">
+      <span>Written by <a href="https://github.com/olegstepanov">Oleg Stepanov</a> (<a href="https://github.com/olegstepanov/loop">source code</a>). Shameless copy of <a href="http://loopgame.co/">Loop</a> by <a href="https://www.infinitygames.io/">Infinity games</a>.
     </div>
 
     <script src="bundle.js"></script>
